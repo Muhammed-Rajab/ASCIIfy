@@ -11,8 +11,59 @@
         <script src="./script.js" defer></script>
     </head>
     <body>
-        <video id="videoInput"></video> <canvas id="canvasOutput"></canvas>
-
-        <div></div>
+        <div class="app-options-container">
+            <h2>ASCII.fy</h2>
+            <div class="control">
+                <label for="resolutions">Resolution</label>
+                <select id="resolutions">
+                    <option value="64x48">64x48</option>
+                    <option value="128x72">128×72</option>
+                    <option value="256x144">256×144</option>
+                    <option value="320x240">320×240</option>
+                    <option value="480x360">480×360</option>
+                    <option value="640x480">640×480</option>
+                    <option value="852x480">852×480</option>
+                    <option value="1280x720">1280×720</option>
+                </select>
+            </div>
+            <div class="control">
+                <label for="font-size-selector">Font Size</label>
+                <input
+                    type="number"
+                    id="font-size-selector"
+                    min="1"
+                    max="24"
+                    value="4"
+                />
+            </div>
+            <div class="control">
+                <label for="line-height-selector">Line Height</label>
+                <input
+                    type="number"
+                    id="line-height-selector"
+                    min="-8"
+                    max="24"
+                    value="4"
+                />
+            </div>
+            <div class="control">
+                <label for="font-color-selector">Font Color</label>
+                <input type="color" id="font-color-selector" value="#ffffff" />
+            </div>
+            <button id="reset-btn">Reset</button>
+            <p>Source code: <a href="" style="color: pink">Here!</a></p>
+            <p>
+                Made with 💖 By
+                <a
+                    href="https://github.com/Muhammed-Rajab"
+                    style="color: darkred"
+                    >Rajab</a
+                >
+            </p>
+        </div>
+        <div id="output"></div>
+        <div class="message-modal">
+            <h1>Loading</h1>
+        </div>
     </body>
 </html>

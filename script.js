@@ -1,157 +1,176 @@
 "use strict";
-// const div = document.querySelector("div");
 
-// const constraints = {
-//     video: { width: { min: 1280 }, height: { min: 720 } },
-//     video: { width: { min: 640 }, height: { min: 480 } },
-//     // video: { width: { min: 320 }, height: { min: 240 } },
-// };
-
-// const DENSITY = "      .:-i|=+%O#@";
-
-// navigator.mediaDevices.getUserMedia(constraints).then((stream) => {
-//     const videoEl = document.createElement("video");
-//     videoEl.srcObject = stream;
-
-//     const canvas = document.createElement("canvas");
-//     canvas.width = constraints.video.width.min;
-//     canvas.height = constraints.video.height.min;
-//     const ctx = canvas.getContext("2d");
-
-//     // const canvas2 = document.createElement("canvas");
-//     // canvas2.width = constraints.video.width.min;
-//     // canvas2.height = constraints.video.height.min;
-//     // const ctx2 = canvas2.getContext("2d");
-//     // document.body.append(canvas2);
-
-//     videoEl.autoplay = true;
-
-//     function getCharacterIndex(pixel) {
-//         const raw_position = Math.floor(pixel / DENSITY.length);
-//         const remainder = pixel % DENSITY.length;
-
-//         const charIndex =
-//             remainder < DENSITY.length / 2 ? raw_position + 1 : raw_position;
-//         return DENSITY[Math.floor(charIndex)];
-//     }
-
-//     function asciiImage(data, width) {
-//         let img = "";
-
-//         for (let i = 0; i < data.length; i += 4) {
-//             const red = data[i + 0];
-//             const green = data[i + 1];
-//             const blue = data[i + 2];
-//             const average = Math.floor((red + blue + green) / 3);
-
-//             const char = getCharacterIndex(average);
-
-//             img += char === " " ? "&nbsp;" : char;
-
-//             if (i % (width * 4) === 0) {
-//                 img += "<br/>";
-//                 // console.log(`New row at ${i}`);
-//             }
-//         }
-//         return img;
-//     }
-
-//     function computeFrame() {
-//         ctx.drawImage(videoEl, 0, 0);
-
-//         const frame = ctx.getImageData(0, 0, canvas.width, canvas.height);
-//         const data = frame.data;
-
-//         const image = asciiImage(data, canvas.width);
-//         div.innerHTML = image;
-
-//         // ctx2.putImageData(frame, 0, 0);
-//     }
-
-//     let running = true;
-//     function frameLoop() {
-//         computeFrame();
-
-//         running && setTimeout(frameLoop, 0);
-//     }
-
-//     videoEl.addEventListener("playing", () => {
-//         frameLoop();
-//     });
-//     document.body.addEventListener("click", () => {
-//         running = !running;
-//     });
-// });
-
-// * OPENCV version
-const div = document.querySelector("div");
-const DENSITY = "      .:-i|=+%O#@";
-
-function getCharacterIndex(pixel) {
-    const raw_position = Math.floor(pixel / DENSITY.length);
-    const remainder = pixel % DENSITY.length;
-
-    const charIndex =
-        remainder < DENSITY.length / 2 ? raw_position + 1 : raw_position;
-    return DENSITY[Math.floor(charIndex)];
-}
-
-function asciiImage(data, width) {
-    let img = "";
-
-    for (let i = 0; i < data.length; i += 1) {
-        const char = getCharacterIndex(data[i]);
-
-        img += char === " " ? "&nbsp;" : char;
-
-        if (i % width === 0) {
-            img += "<br/>";
-            // console.log(`New row at ${i}`);
-        }
+class Controls {
+    __setNewResizeDimension(width, height) {
+        this.resizeDimension = new cv.Size(width, height);
     }
-    return img;
+    __setFontSize(fs) {
+        this.asciiImagediv.style.fontSize = `${fs}pt`;
+    }
+    __setLineHeight(lh) {
+        this.asciiImagediv.style.lineHeight = `${lh}pt`;
+    }
+    __setFontColor(color) {
+        this.asciiImagediv.style.color = color;
+    }
+    __resetValues() {
+        this.__setNewResizeDimension(128, 72);
+        this.__setFontSize(4);
+        this.__setLineHeight(4);
+        this.__setFontColor("#ffffff");
+    }
 }
 
-async function main() {
-    const stream = await navigator.mediaDevices.getUserMedia({
-        video: true,
-        audio: false,
-    });
+class App extends Controls {
+    constructor() {
+        super();
+        this.asciiImagediv = document.querySelector("#output");
+        this.messageModal = document.querySelector(".message-modal");
+        this.videoEl = document.createElement("video");
+        this.videoEl.width = 640;
+        this.videoEl.height = 480;
 
-    let video = document.createElement("video");
-    video.width = 640;
-    video.height = 480;
+        this.DENSITY = "      .:-i|=+%O#@";
+        this.resizeDimension = new cv.Size(256, 144);
 
-    video.srcObject = stream;
-    video.play();
+        // * Event listeners for controls
+        const resolutionSelector = document.querySelector("#resolutions");
+        const resetBtn = document.querySelector("#reset-btn");
+        const fontColorSelector = document.querySelector(
+            "#font-color-selector"
+        );
+        const fontSizeSelector = document.querySelector("#font-size-selector");
+        const lineHeightSelector = document.querySelector(
+            "#line-height-selector"
+        );
 
-    let src = new cv.Mat(video.height, video.width, cv.CV_8UC4);
-    let dst = new cv.Mat(video.height, video.width, cv.CV_8UC1);
-    let cap = new cv.VideoCapture(video);
+        resolutionSelector.addEventListener("change", (e) => {
+            const [width, height] = e.target.value.split("x");
+            this.__setNewResizeDimension(+width, +height);
+        });
+        fontSizeSelector.addEventListener("change", (e) => {
+            this.__setFontSize(+e.target.value);
+        });
+        lineHeightSelector.addEventListener("change", (e) => {
+            this.__setLineHeight(+e.target.value);
+        });
+        fontColorSelector.addEventListener("change", (e) => {
+            this.__setFontColor(e.target.value);
+        });
+        resetBtn.addEventListener("click", () => this.__resetValues());
+    }
 
-    let running = true;
-    document.body.addEventListener("click", () => {
-        running = !running;
-    });
-    function processVideo() {
+    __getCharacterIndex(pixel) {
+        /*
+         * Maps the value of pixel to a character in DENSITY string
+         */
+        const raw_position = Math.floor(pixel / this.DENSITY.length);
+        const remainder = pixel % this.DENSITY.length;
+
+        const charIndex =
+            remainder < this.DENSITY.length / 2
+                ? raw_position + 1
+                : raw_position;
+        return this.DENSITY[Math.floor(charIndex)];
+    }
+
+    __asciiImageString(data, width) {
+        /*
+         * Creates an ascii string from webcam stream
+         */
+        let img = "";
+
+        for (let i = 0; i < data.length; i += 1) {
+            const char = this.__getCharacterIndex(data[i]);
+
+            img += char === " " ? "&nbsp;" : char;
+
+            if (i % width === 0) {
+                img += "<br/>";
+            }
+        }
+        return img;
+    }
+
+    __processWebcamFeedToASCII() {
+        /*
+         * Process each webcam feed frame and converts it into ascii string
+         */
         try {
-            cap.read(src);
-            cv.cvtColor(src, dst, cv.COLOR_RGBA2GRAY);
-            // let dsize = new cv.Size(256, 144);
-            let dsize = new cv.Size(128, 72);
-            cv.resize(dst, dst, dsize, 0, 0, cv.INTER_AREA);
+            this.videoCapture.read(this.srcMat);
+            cv.cvtColor(this.srcMat, this.dstMat, cv.COLOR_RGBA2GRAY);
 
-            div.innerHTML = asciiImage(dst.data, dsize.width);
+            cv.resize(
+                this.dstMat,
+                this.dstMat,
+                this.resizeDimension,
+                0,
+                0,
+                cv.INTER_AREA
+            );
 
-            // cv.imshow("canvasOutput", dst);
-            running && setTimeout(processVideo, 0);
+            let asciiImg = this.__asciiImageString(
+                this.dstMat.data,
+                this.resizeDimension.width
+            );
+            this.asciiImagediv.innerHTML = asciiImg;
+            setTimeout(() => this.__processWebcamFeedToASCII(), 0);
         } catch (err) {
             console.error(err);
         }
     }
 
-    // schedule the first one.
-    setTimeout(processVideo, 0);
+    async __getCameraStreamAccess() {
+        /*
+         * Prompts user for permission to access camera
+         */
+        "mediaDevices" in navigator && "getUserMedia" in navigator.mediaDevices;
+        navigator.mediaDevices?.getUserMedia ||
+            alert("Your device doesn't support this application");
+        navigator.permissions.query({ name: "camera" }).then(function (result) {
+            if (result.state === "prompt") {
+                document
+                    .querySelector(".message-modal")
+                    .querySelector("h1").textContent =
+                    "Allow our site to access your camera";
+            }
+        });
+        return await navigator.mediaDevices.getUserMedia({
+            video: true,
+            audio: false,
+        });
+    }
+
+    async run() {
+        // * Main function where everything starts
+        try {
+            this.videoEl.srcObject = await this.__getCameraStreamAccess();
+            this.messageModal.style.display = "none";
+            this.videoEl.play();
+
+            this.srcMat = new cv.Mat(
+                this.videoEl.height,
+                this.videoEl.width,
+                cv.CV_8UC4
+            );
+            this.dstMat = new cv.Mat(
+                this.videoEl.height,
+                this.videoEl.width,
+                cv.CV_8UC1
+            );
+            this.videoCapture = new cv.VideoCapture(this.videoEl);
+
+            // Starts the loop
+            setTimeout(this.__processWebcamFeedToASCII.bind(this), 0);
+        } catch (e) {
+            if (e.name === "NotAllowedError") {
+                this.messageModal.style.display = "flex";
+                this.messageModal.querySelector("h1").textContent =
+                    "Unblock your webcam acess to our site";
+            }
+        }
+    }
 }
 
-main();
+const app = new App();
+app.run();
