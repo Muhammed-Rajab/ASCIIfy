@@ -61,7 +61,13 @@ class App extends Controls {
         fontColorSelector.addEventListener("change", (e) => {
             this.__setFontColor(e.target.value);
         });
-        resetBtn.addEventListener("click", () => this.__resetValues());
+        resetBtn.addEventListener("click", () => {
+            this.__resetValues();
+            lineHeightSelector.value = "4";
+            fontSizeSelector.value = "4";
+            fontColorSelector.value = "#ffffff";
+            resolutionSelector.value = "128x72";
+        });
         inverseBtn.addEventListener("click", () => this.__reverseDensity());
     }
 
