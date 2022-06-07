@@ -3,7 +3,7 @@
     margin: 0;
 }
 body {
-    font-family: "Courier";
+    font-family: "Courier", "monospace";
     color: white;
     background: #000;
 }
@@ -33,7 +33,7 @@ body {
 input {
     background-color: #000;
     color: white;
-    font-family: "Courier";
+    font-family: "Courier", "monospace";
     border-radius: 0;
     outline: 0;
 }
@@ -50,7 +50,7 @@ input {
     line-height: 4pt;
 }
 button {
-    font-family: "Courier";
+    font-family: "Courier", "monospace";
     font-size: 1.2rem;
     font-weight: bold;
 }
